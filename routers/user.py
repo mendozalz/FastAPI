@@ -1,7 +1,7 @@
-from fastapi import FastAPI
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI()
+router = APIRouter(prefix="/user", tags=["usuario{id}"])
 
 class User(BaseModel):
     id: int
@@ -22,32 +22,30 @@ def search_user_id(id:int):
     except:
         return "Usuario no encontrado"
 
-@app.get("/users")
-async def users():
-    return user_list
 
 #Pathparams
-@app.get("/user/{id}")
+@router.get("/{id}")
 async def user(id:int):
     return search_user_id(id)
 
 #Queryparams
-@app.get("/user/")
+@router.get("/")
 async def user(id:int):
     return search_user_id(id)
 
 ############# Method Post #################
 
-@app.post("/user/")
+@router.post("/", status_code=201, description="Usuario creado exitosamente", response_model=User) # Solo en este caso se muestra el uso de Execciones HTTP ya que es a modo de estudio
 async def user(user: User):
     if type(search_user_id(user.id)) == User:
-        return f"Error. El usuario ---{user.name}--- ya existe"
-    user_list.append(user)
+        raise HTTPException(status_code=404, detail=f"El usuario ---{user.name}--- ya existe", )
+        #return f"Error. El usuario ---{user.name}--- ya existe"
+    user_list.routerend(user)
     return user
 
 ############# Method Put #################
 
-@app.put("/user/")
+@router.put("/")
 async def user(user: User):
     found = False
     for index, saved_user in enumerate(user_list):
@@ -60,7 +58,7 @@ async def user(user: User):
 
 ############# Method Delete #################
 
-@app.delete("/user/{id}")
+@router.delete("/{id}")
 async def user(id:int):
     found = False
     for index, delete_user in enumerate(user_list):
